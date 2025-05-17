@@ -1,28 +1,31 @@
 // src/app/page.js
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 import LandingHeader from "../components/LandingHeader";
 import LandingFeature from "../components/LandingFeature";
 import LandingScreenshots from "../components/LandingScreenshots";
-import LandingFooter from '../components/LandingFooter';
-console.log("LandingHeader:", LandingHeader);
-console.log("LandingFeature:", LandingFeature);
-console.log("LandingScreenshots:", LandingScreenshots);
-console.log("LandingFooter:", LandingFooter);
+import LandingFooter from "../components/LandingFooter";
+// console.log("LandingHeader:", LandingHeader);
+// console.log("LandingFeature:", LandingFeature);
+// console.log("LandingScreenshots:", LandingScreenshots);
+// console.log("LandingFooter:", LandingFooter);
 
 export default function Home() {
   // Enable smooth scrolling behavior
   useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
+    document.documentElement.style.scrollBehavior = "smooth";
     return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
+      document.documentElement.style.scrollBehavior = "auto";
     };
   }, []);
-
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    window.location.href = "/planner";
+  };
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
@@ -46,8 +49,8 @@ export default function Home() {
               transition={{
                 duration: Math.random() * 20 + 20,
                 repeat: Infinity,
-                repeatType: 'reverse',
-                ease: 'easeInOut',
+                repeatType: "reverse",
+                ease: "easeInOut",
               }}
             />
           ))}
@@ -57,7 +60,7 @@ export default function Home() {
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center">
-            <motion.h1 
+            <motion.h1
               className="text-4xl md:text-6xl font-bold text-gray-800 dark:text-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -65,30 +68,31 @@ export default function Home() {
             >
               Interactive Itinerary Board
             </motion.h1>
-            
-            <motion.p 
+
+            <motion.p
               className="mt-6 text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
             >
-              Plan your perfect trip with our visual drag-and-drop itinerary planner. 
-              Organize activities by day, rearrange with ease, all in one beautiful interface.
+              Plan your perfect trip with our visual drag-and-drop itinerary
+              planner. Organize activities by day, rearrange with ease, all in
+              one beautiful interface.
             </motion.p>
-            
-            <motion.div 
+
+            <motion.div
               className="mt-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.4 }}
             >
-              <a 
-                href="/itinerary" 
+              <button
+                onClick={handleSubmit}
                 className="group inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-indigo-600 rounded-full hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 Start Planning
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </button>
             </motion.div>
           </div>
         </div>

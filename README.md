@@ -51,7 +51,7 @@ npm install
 3. Run the dev server
 
 npm run dev
-Visit http://localhost:3000/itinerary to view the app.
+Visit http://localhost:3000/ to view the app.
 
 
 📝 Notes
@@ -60,6 +60,8 @@ This project was developed as part of a hackathon.
 It does not use AI-generated features or backend services.
 
 All data is locally mocked using JavaScript objects.
+
+📦Deployed Link - https://itinerary-board.vercel.app/
 
 🧑‍🎓 Author
 Kushal Rastogi
