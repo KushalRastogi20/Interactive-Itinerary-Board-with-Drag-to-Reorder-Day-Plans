@@ -4,7 +4,7 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 import LandingHeader from "../components/LandingHeader";
 import LandingFeature from "../components/LandingFeature";
 import LandingScreenshots from "../components/LandingScreenshots";
@@ -22,10 +22,13 @@ export default function Home() {
       document.documentElement.style.scrollBehavior = "auto";
     };
   }, []);
+const router = useRouter();
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    window.location.href = "/planner";
+    router.push('/planner');  
   };
+
   return (
     <main className="min-h-screen">
       {/* Hero Section */}

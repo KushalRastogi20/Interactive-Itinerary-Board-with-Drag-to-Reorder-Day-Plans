@@ -8,6 +8,7 @@ import JSConfetti from "js-confetti";
 import { Check, Pencil, Trash2, Globe, Calendar, MapPin, ChevronDown, ChevronUp, Camera, Umbrella, Plane } from 'lucide-react';
 // import { motion } from 'framer-motion';
 import { CSS } from "@dnd-kit/utilities";
+import html2pdf from 'html2pdf.js';
 import { 
   Plus,
   // Pencil, 
@@ -104,12 +105,12 @@ const initialTrips = [
 
 // Trip colors
 const tripColors = [
-  { id: "blue", bg: "bg-blue-500", light: "bg-blue-200", hoverBg: "bg-blue-600" },
-  { id: "green", bg: "bg-green-500", light: "bg-green-200", hoverBg: "bg-green-600" },
-  { id: "purple", bg: "bg-purple-500", light: "bg-purple-200", hoverBg: "bg-purple-600" },
-  { id: "pink", bg: "bg-pink-500", light: "bg-pink-200", hoverBg: "bg-pink-600" },
-  { id: "amber", bg: "bg-amber-500", light: "bg-amber-200", hoverBg: "bg-amber-600" },
-  { id: "teal", bg: "bg-teal-500", light: "bg-teal-200", hoverBg: "bg-teal-600" },
+  { id: "blue", bg: "bg-blue-500", light: "bg-blue-200", hoverBg: "bg-blue-900" },
+  { id: "green", bg: "bg-green-500", light: "bg-green-200", hoverBg: "bg-green-900" },
+  { id: "purple", bg: "bg-purple-500", light: "bg-purple-200", hoverBg: "bg-purple-900" },
+  { id: "pink", bg: "bg-pink-500", light: "bg-pink-200", hoverBg: "bg-pink-900" },
+  { id: "amber", bg: "bg-amber-500", light: "bg-amber-200", hoverBg: "bg-amber-900" },
+  { id: "teal", bg: "bg-teal-500", light: "bg-teal-200", hoverBg: "bg-teal-900" },
 ];
 
 // Format date for display
@@ -141,15 +142,16 @@ const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const selectedColor = tripColors.find(tc => tc.id === color) || tripColors[0];
   
-  const weatherIcons = {
-    sunny: <Umbrella className="w-4 h-4 text-yellow-300" />,
-    rainy: <Umbrella className="w-4 h-4 text-blue-300" />,
-    default: <Umbrella className="w-4 h-4 text-gray-300" />
-  };
+  // const weatherIcons = {
+  //   sunny: <Umbrella className="w-4 h-4 text-yellow-300" />,
+  //   rainy: <Umbrella className="w-4 h-4 text-blue-300" />,
+  //   default: <Umbrella className="w-4 h-4 text-gray-300" />
+  // };
+  
 
- const getWeatherIcon = () => {
-    return trip.weather ? weatherIcons[trip.weather] : weatherIcons.default;
-  };
+//  const getWeatherIcon = () => {
+//     return trip.weather ? weatherIcons[trip.weather] : weatherIcons.default;
+//   };
 
 
   
@@ -186,12 +188,19 @@ const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
           >
             <Pencil className="w-4 h-4 text-gray-600" />
           </button>
+          <div className="relative group">
           <button 
             onClick={() => onDelete(activity.id)}
             className="p-1 hover:bg-gray-100 rounded-full transition"
           >
             <Trash2 className="w-4 h-4 text-gray-600" />
           </button>
+          <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 
+                  bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap 
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+            Double click to delete
+          </div>
+          </div>
           <div className="relative">
             <button 
               onMouseEnter={() => setShowTooltip(true)}
@@ -787,15 +796,29 @@ export default function TravelItineraryPlanner() {
     }
     
     // Simulate saving
-    setTimeout(() => {
-      alert("Your itinerary has been saved successfully!");
-    }, 1000);
+    // setTimeout(() => {
+    //   alert("Your itinerary has been saved successfully!");
+    // }, 1000);
   };
 
   // Export as PDF (placeholder)
   const exportAsPdf = () => {
-    alert("Exporting as PDF... (This would connect to a PDF generation service)");
+  const element = document.getElementById('itinerary-content');
+  if (!element) {
+    alert('Itinerary content not found!');
+    return;
+  }
+
+  const opt = {
+    margin:       0.5,
+    filename:     'travel-itinerary.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
+
+  html2pdf().set(opt).from(element).save();
+};
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -1028,6 +1051,8 @@ export default function TravelItineraryPlanner() {
   };
 
   return (
+ <div id="itinerary-content">
+
     <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-r from-black to-blue-900'} flex items-center justify-center p-4 font-sans`}>
       <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl max-w-7xl w-full h-[85vh] flex overflow-hidden">
         {/* All trips view */}
@@ -1337,6 +1362,7 @@ export default function TravelItineraryPlanner() {
           filter: invert(1);
         }
       `}</style>
+    </div>
     </div>
   );
 }

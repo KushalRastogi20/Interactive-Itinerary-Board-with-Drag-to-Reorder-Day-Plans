@@ -11,30 +11,30 @@ const screenshots = [
     id: 1,
     title: "Drag & Drop Interface",
     description: "Easily rearrange activities by dragging them between days or reordering within a day.",
-    imageUrl: "/api/placeholder/800/500", // Placeholder for actual screenshot
+    imageUrl: "/SS1.png", // Placeholder for actual screenshot
     altText: "Screenshot of drag and drop functionality"
   },
   {
     id: 2,
     title: "Day-wise Planning View",
     description: "Organize your trip with a clean, visual day-by-day planning board.",
-    imageUrl: "/api/placeholder/800/500", // Placeholder for actual screenshot
+    imageUrl: "/SS2.png", // Placeholder for actual screenshot
     altText: "Screenshot of day-wise planning view"
   },
   {
     id: 3,
     title: "Mobile Responsive Design",
     description: "Plan your trip on any device with our fully responsive interface.",
-    imageUrl: "/api/placeholder/800/500", // Placeholder for actual screenshot
+    imageUrl: "/SS3.png", // Placeholder for actual screenshot
     altText: "Screenshot of mobile responsive design"
   },
-  {
-    id: 4,
-    title: "Light & Dark Mode",
-    description: "Plan your trip comfortably day or night with automatic theme switching.",
-    imageUrl: "/api/placeholder/800/500", // Placeholder for actual screenshot
-    altText: "Screenshot of light and dark mode toggle"
-  }
+  // {
+  //   id: 4,
+  //   title: "Light & Dark Mode",
+  //   description: "Plan your trip comfortably day or night with automatic theme switching.",
+  //   imageUrl: "/api/placeholder/800/500", // Placeholder for actual screenshot
+  //   altText: "Screenshot of light and dark mode toggle"
+  // }
 ];
 
 export default function LandingScreenshots() {
