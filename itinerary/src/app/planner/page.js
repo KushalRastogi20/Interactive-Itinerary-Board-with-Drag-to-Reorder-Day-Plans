@@ -9,7 +9,7 @@ import { Check, Pencil, Trash2, Globe, Calendar, MapPin, ChevronDown, ChevronUp,
 // import { motion } from 'framer-motion';
 import { CSS } from "@dnd-kit/utilities";
 // import html2pdf from 'html2pdf.js';
-import {PdfExporter} from "@/components/PdfExp";
+import PdfExporter from "@/components/PdfExp";
 import { 
   Plus,
   // Pencil, 
