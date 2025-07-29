@@ -9,7 +9,7 @@ import JSConfetti from "js-confetti";
 import { Check, Pencil, Trash2, Globe, Calendar, MapPin, ChevronDown, ChevronUp, Camera, Umbrella, Plane } from 'lucide-react';
 import { CSS } from "@dnd-kit/utilities";
 import PdfExporter from "@/components/PdfExp";
-// import axios from 'axios';
+import axios from 'axios';
 import api from '../../utils/axios'; // Adjust the import path as necessary
 import {
   Plus,
