@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -6,33 +7,27 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 import JSConfetti from "js-confetti";
 import { Check, Pencil, Trash2, Globe, Calendar, MapPin, ChevronDown, ChevronUp, Camera, Umbrella, Plane } from 'lucide-react';
-// import { motion } from 'framer-motion';
 import { CSS } from "@dnd-kit/utilities";
-// import html2pdf from 'html2pdf.js';
 import PdfExporter from "@/components/PdfExp";
-import { 
+import axios from 'axios';
+import api from '../../utils/axios'; // Adjust the import path as necessary
+import {
   Plus,
-  // Pencil, 
-  // Trash2, 
-  Info, 
-  Clock, 
-  FileText, 
+  Info,
+  Clock,
+  FileText,
   Save,
   ArrowRight,
-  // Calendar,
   ChevronLeft,
-  // Globe,
   Map,
   Settings,
   Moon,
   Sun,
   X,
-  // Check,
-  // Plane
 } from "lucide-react";
 
-// Initial sample trips data
-const initialTrips = [
+// Initial sample trips data - declared at the top before any useState
+const sampleTrips = [
   {
     id: "trip-1",
     name: "Paris Adventure",
@@ -104,7 +99,7 @@ const initialTrips = [
   }
 ];
 
-// Trip colors
+// Trip colors - keeping the original colors as requested
 const tripColors = [
   { id: "blue", bg: "bg-blue-500", light: "bg-blue-200", hoverBg: "bg-blue-900" },
   { id: "green", bg: "bg-green-500", light: "bg-green-200", hoverBg: "bg-green-900" },
@@ -115,15 +110,11 @@ const tripColors = [
 ];
 
 // Format date for display
-// const formatDate = (dateString) => {
-//   const options = { year: 'numeric', month: 'short', day: 'numeric' };
-//   return new Date(dateString).toLocaleDateString('en-US', options);
-// };
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
 // Calculate trip duration in days
 const getTripDuration = (startDate, endDate) => {
   const start = new Date(startDate);
@@ -132,30 +123,12 @@ const getTripDuration = (startDate, endDate) => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 };
-// const getTripDuration = (startDate, endDate) => {
-//     const start = new Date(startDate);
-//     const end = new Date(endDate);
-//     const diffTime = Math.abs(end - start);
-//     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-//   };
+
 // Sortable Activity Card component with drag and drop functionality
 const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const selectedColor = tripColors.find(tc => tc.id === color) || tripColors[0];
-  
-  // const weatherIcons = {
-  //   sunny: <Umbrella className="w-4 h-4 text-yellow-300" />,
-  //   rainy: <Umbrella className="w-4 h-4 text-blue-300" />,
-  //   default: <Umbrella className="w-4 h-4 text-gray-300" />
-  // };
-  
 
-//  const getWeatherIcon = () => {
-//     return trip.weather ? weatherIcons[trip.weather] : weatherIcons.default;
-//   };
-
-
-  
   const {
     attributes,
     listeners,
@@ -163,7 +136,7 @@ const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
     transform,
     transition,
   } = useSortable({ id: activity.id });
-  
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -183,27 +156,27 @@ const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-gray-800 text-lg">{activity.title}</h3>
         <div className="flex space-x-2">
-          <button 
+          <button
             onClick={() => onEdit(activity)}
             className="p-1 hover:bg-gray-100 rounded-full transition"
           >
             <Pencil className="w-4 h-4 text-gray-600" />
           </button>
           <div className="relative group">
-          <button 
-            onClick={() => onDelete(activity.id)}
-            className="p-1 hover:bg-gray-100 rounded-full transition"
-          >
-            <Trash2 className="w-4 h-4 text-gray-600" />
-          </button>
-          <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 
+            <button
+              onClick={() => onDelete(activity.id)}
+              className="p-1 hover:bg-gray-100 rounded-full transition"
+            >
+              <Trash2 className="w-4 h-4 text-gray-600" />
+            </button>
+            <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 
                   bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap 
                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-            Double click to delete
-          </div>
+              Double click to delete
+            </div>
           </div>
           <div className="relative">
-            <button 
+            <button
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
               className="p-1 hover:bg-gray-100 rounded-full transition"
@@ -222,7 +195,7 @@ const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
         <Clock className="w-4 h-4 mr-1" />
         <span className="text-sm">{activity.time}</span>
       </div>
-      <div className={`absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-12 ${selectedColor.light} rounded-r-md`}/>
+      <div className={`absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-12 ${selectedColor.light} rounded-r-md`} />
     </motion.div>
   );
 };
@@ -230,14 +203,13 @@ const SortableActivityCard = ({ activity, onEdit, onDelete, color }) => {
 // Day card component for day list
 const DayCard = ({ day, isActive, onClick, onEdit, onDelete, tripColor }) => {
   const selectedColor = tripColors.find(tc => tc.id === tripColor) || tripColors[0];
-  
+
   return (
-    <div 
-      className={`w-full rounded-lg py-3 px-4 mb-2 flex items-center justify-between transition cursor-pointer ${
-        isActive 
-          ? `${selectedColor.bg} text-white font-bold` 
-          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
-      }`}
+    <div
+      className={`w-full rounded-lg py-3 px-4 mb-2 flex items-center justify-between transition cursor-pointer ${isActive
+        ? `${selectedColor.bg} text-white font-bold`
+        : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+        }`}
     >
       <div className="flex-1" onClick={onClick}>
         <div className="flex items-center">
@@ -248,18 +220,18 @@ const DayCard = ({ day, isActive, onClick, onEdit, onDelete, tripColor }) => {
           <div className="text-xs mt-1 opacity-80">{formatDate(day.date)}</div>
         )}
       </div>
-      
+
       <div className="flex items-center space-x-1">
         <span className="flex items-center justify-center w-6 h-6 text-xs bg-white/20 rounded-full mr-2">
           {day.activities.length}
         </span>
-        <button 
+        <button
           onClick={(e) => { e.stopPropagation(); onEdit(day); }}
           className="p-1 hover:bg-white/20 rounded-full transition"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
-        <button 
+        <button
           onClick={(e) => { e.stopPropagation(); onDelete(day.id); }}
           className="p-1 hover:bg-white/20 rounded-full transition"
         >
@@ -276,26 +248,26 @@ const TripCard = ({ trip, isActive, onClick, onEdit, onDelete, onActivate }) => 
 
   const selectedColor = tripColors.find(tc => tc.id === trip.color) || tripColors[0];
   const daysLeft = () => {
-  const today = new Date();
-  const start = new Date(trip.startDate);
-  const diffTime = start - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const today = new Date();
+    const start = new Date(trip.startDate);
+    const diffTime = start - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays < 0) {
-    return "Past trip";
-  } else if (diffDays === 0) {
-    return "Today!";
-  } else {
-    return `${diffDays} days left`;
-  }
-};
-const toggleExpand = (e) => {
+    if (diffDays < 0) {
+      return "Past trip";
+    } else if (diffDays === 0) {
+      return "Today!";
+    } else {
+      return `${diffDays} days left`;
+    }
+  };
+  const toggleExpand = (e) => {
     e.stopPropagation();
     setExpanded(!expanded);
   };
 
   return (
-        <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -303,15 +275,15 @@ const toggleExpand = (e) => {
       transition={{ duration: 0.2 }}
       className={`w-full rounded-xl overflow-hidden mb-4 shadow-lg transform transition-all duration-300 ${isActive ? 'ring-2 ring-white scale-102' : ''}`}
     >
-      <div 
-        className={`${selectedColor.bg} p-5 cursor-pointer relative overflow-hidden`} 
+      <div
+        className={`${selectedColor.bg} p-5 cursor-pointer relative overflow-hidden`}
         onClick={onClick}
       >
         {/* Background pattern */}
         <div className="absolute top-0 right-0 opacity-10">
           <Plane className="w-48 h-48 -rotate-12 translate-x-12 -translate-y-12" />
         </div>
-        
+
         {/* Header section */}
         <div className="flex justify-between items-center relative z-10">
           <div>
@@ -321,10 +293,10 @@ const toggleExpand = (e) => {
               <span className="text-sm font-medium">{trip.destination}</span>
             </div>
           </div>
-          
+
           <div className="flex space-x-1">
             {!isActive && (
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={(e) => { e.stopPropagation(); onActivate(trip.id); }}
@@ -334,7 +306,7 @@ const toggleExpand = (e) => {
                 <Check className="w-4 h-4 text-white" />
               </motion.button>
             )}
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={(e) => { e.stopPropagation(); onEdit(trip); }}
@@ -342,7 +314,7 @@ const toggleExpand = (e) => {
             >
               <Pencil className="w-4 h-4 text-white" />
             </motion.button>
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={(e) => { e.stopPropagation(); onDelete(trip.id); }}
@@ -352,10 +324,10 @@ const toggleExpand = (e) => {
             </motion.button>
           </div>
         </div>
-        
+
         {/* Trip stats */}
         <div className="flex justify-between mt-4 text-xs font-medium bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-          <motion.div 
+          <motion.div
             whileHover={{ y: -2 }}
             className="text-center"
           >
@@ -365,8 +337,8 @@ const toggleExpand = (e) => {
               <div>{formatDate(trip.startDate)}</div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             whileHover={{ y: -2 }}
             className="text-center"
           >
@@ -376,8 +348,8 @@ const toggleExpand = (e) => {
               <div>{formatDate(trip.endDate)}</div>
             </div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             whileHover={{ y: -2 }}
             className="text-center"
           >
@@ -387,10 +359,10 @@ const toggleExpand = (e) => {
             </div>
           </motion.div>
         </div>
-        
+
         {/* Countdown badge */}
         <div className="absolute top-1 right-5 ">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -400,19 +372,19 @@ const toggleExpand = (e) => {
           </motion.div>
         </div>
       </div>
-      
+
       {/* Active trip indicator */}
       {isActive && (
         <div className="bg-black/50 backdrop-blur-md p-3 text-white flex justify-between items-center">
           <div className="text-sm flex items-center">
-            <motion.span 
-              animate={{ 
+            <motion.span
+              animate={{
                 scale: [1, 1.2, 1],
                 opacity: [1, 0.8, 1]
               }}
-              transition={{ 
-                repeat: Infinity, 
-                duration: 2 
+              transition={{
+                repeat: Infinity,
+                duration: 2
               }}
               className="bg-green-500 w-2 h-2 rounded-full mr-2"
             />
@@ -435,7 +407,7 @@ const toggleExpand = (e) => {
           </motion.button>
         </div>
       )}
-      
+
       {/* Expanded details section */}
       {isActive && expanded && (
         <motion.div
@@ -468,16 +440,66 @@ const toggleExpand = (e) => {
     </motion.div>
   );
 };
+
 // Main component
 export default function TravelItineraryPlanner() {
-  const [trips, setTrips] = useState(initialTrips);
-  const [activeView, setActiveView] = useState("trips"); // trips, planning
-  const [activeTrip, setActiveTrip] = useState(initialTrips.find(trip => trip.active)?.id || null);
+  const [trips, setTrips] = useState(sampleTrips);
+  const [activeView, setActiveView] = useState("trips");
+  const [activeTrip, setActiveTrip] = useState(sampleTrips.find(trip => trip.active)?.id || null);
   const [activeDay, setActiveDay] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(null); // trip, day, activity
+  const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch trips using Axios
+  const fetchTrips = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/trips/allTrips');
+      console.log("response", response);
+
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        setTrips(response.data.data);
+        // Set active trip if none exists
+        const activeExistingTrip = response.data.data.find(trip => trip.active);
+        if (activeExistingTrip) {
+          setActiveTrip(activeExistingTrip.id);
+        } else if (response.data.data.length > 0) {
+          setActiveTrip(response.data.data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching trips: ", error);
+      // Keep sample data on error
+      console.log("Using sample data due to fetch error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle save trip
+  const handleSaveTrip = async (tripData) => {
+    try {
+      const createTripData = await api.post('/trips/create', {
+        name: tripData.name,
+        destination: tripData.destination,
+        startDate: tripData.startDate,
+        endDate: tripData.endDate,
+        color: tripData.color,
+      });
+      console.log("Trip created successfully:", createTripData);
+      // Refresh trips after creating
+      await fetchTrips();
+    } catch (error) {
+      console.error("Error Saving Trip:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrips();
+  }, []);
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -487,7 +509,7 @@ export default function TravelItineraryPlanner() {
 
   // Get current trip data
   const currentTrip = trips.find(trip => trip.id === activeTrip);
-  
+
   // Get current day data
   const currentDay = currentTrip?.days.find(day => day.id === activeDay);
 
@@ -507,43 +529,29 @@ export default function TravelItineraryPlanner() {
     };
   }, []);
 
-  // // Add trip color class helper
-  // const getTripColorClass = (colorId, type) => {
-  //   const colorObj = tripColors.find(c => c.id === colorId) || tripColors[0];
-  //   return colorObj[type];
-  // };
-
   // Handle drag end for activities
   const handleDragEnd = (event) => {
     const { active, over } = event;
 
     if (active.id !== over.id) {
       setTrips(trips => {
-        // Find current trip
         const currentTripObj = trips.find(trip => trip.id === activeTrip);
         if (!currentTripObj) return trips;
-        
-        // Find current day
+
         const currentDayObj = currentTripObj.days.find(day => day.id === activeDay);
         if (!currentDayObj) return trips;
-        
-        // Find indices
+
         const oldIndex = currentDayObj.activities.findIndex(activity => activity.id === active.id);
         const newIndex = currentDayObj.activities.findIndex(activity => activity.id === over.id);
 
-        // Create a deep copy of trips
         const newTrips = JSON.parse(JSON.stringify(trips));
-        
-        // Find trip and day indices
         const tripIndex = newTrips.findIndex(trip => trip.id === activeTrip);
         const dayIndex = newTrips[tripIndex].days.findIndex(day => day.id === activeDay);
-        
-        // Move the activity
+
         const updatedActivities = [...newTrips[tripIndex].days[dayIndex].activities];
         const [movedItem] = updatedActivities.splice(oldIndex, 1);
         updatedActivities.splice(newIndex, 0, movedItem);
 
-        // Update trips
         newTrips[tripIndex].days[dayIndex].activities = updatedActivities;
         return newTrips;
       });
@@ -572,8 +580,7 @@ export default function TravelItineraryPlanner() {
   const selectTrip = (tripId) => {
     setActiveTrip(tripId);
     setActiveView("planning");
-    
-    // Set the first day as active
+
     const trip = trips.find(t => t.id === tripId);
     if (trip && trip.days.length > 0) {
       setActiveDay(trip.days[0].id);
@@ -592,27 +599,31 @@ export default function TravelItineraryPlanner() {
   };
 
   // Add new trip
-  const addTrip = (tripData) => {
-    const tripId = `trip-${Date.now()}`;
-    const newTrip = {
-      id: tripId,
-      name: tripData.name || "New Trip",
-      destination: tripData.destination || "Destination",
-      startDate: tripData.startDate || new Date().toISOString().split('T')[0],
-      endDate: tripData.endDate || new Date().toISOString().split('T')[0],
-      color: tripData.color || "blue",
-      active: false,
-      days: []
-    };
-    
-    setTrips([newTrip, ...trips]);
+  const addTrip = async (tripData) => {
+    if (tripData.name && tripData.destination) {
+      await handleSaveTrip(tripData);
+    } else {
+      const tripId = `trip-${Date.now()}`;
+      const newTrip = {
+        id: tripId,
+        name: tripData.name || "New Trip",
+        destination: tripData.destination || "Destination",
+        startDate: tripData.startDate || new Date().toISOString().split('T')[0],
+        endDate: tripData.endDate || new Date().toISOString().split('T')[0],
+        color: tripData.color || "blue",
+        active: false,
+        days: []
+      };
+
+      setTrips([newTrip, ...trips]);
+      selectTrip(tripId);
+    }
     closeModal();
-    selectTrip(tripId);
   };
 
   // Edit trip
   const editTrip = (tripData) => {
-    setTrips(trips.map(trip => 
+    setTrips(trips.map(trip =>
       trip.id === tripData.id ? { ...trip, ...tripData } : trip
     ));
     closeModal();
@@ -623,8 +634,7 @@ export default function TravelItineraryPlanner() {
     if (confirm("Are you sure you want to delete this trip? This action cannot be undone.")) {
       const newTrips = trips.filter(trip => trip.id !== tripId);
       setTrips(newTrips);
-      
-      // If we deleted the active trip, set the first trip as active
+
       if (tripId === activeTrip && newTrips.length > 0) {
         setActiveTrip(newTrips[0].id);
         newTrips[0].active = true;
@@ -639,7 +649,7 @@ export default function TravelItineraryPlanner() {
   // Add new day
   const addDay = (dayData) => {
     if (!activeTrip) return;
-    
+
     const dayCount = currentTrip.days.length + 1;
     const dayId = `day-${Date.now()}`;
     const newDay = {
@@ -648,7 +658,7 @@ export default function TravelItineraryPlanner() {
       date: dayData?.date || "",
       activities: []
     };
-    
+
     setTrips(trips.map(trip => {
       if (trip.id === activeTrip) {
         return {
@@ -658,7 +668,7 @@ export default function TravelItineraryPlanner() {
       }
       return trip;
     }));
-    
+
     setActiveDay(dayId);
     closeModal();
   };
@@ -669,7 +679,7 @@ export default function TravelItineraryPlanner() {
       if (trip.id === activeTrip) {
         return {
           ...trip,
-          days: trip.days.map(day => 
+          days: trip.days.map(day =>
             day.id === dayData.id ? { ...day, name: dayData.name, date: dayData.date } : day
           )
         };
@@ -685,14 +695,13 @@ export default function TravelItineraryPlanner() {
       setTrips(trips.map(trip => {
         if (trip.id === activeTrip) {
           const updatedDays = trip.days.filter(day => day.id !== dayId);
-          
-          // If we deleted the active day, set the first day as active
+
           if (dayId === activeDay && updatedDays.length > 0) {
             setActiveDay(updatedDays[0].id);
           } else if (updatedDays.length === 0) {
             setActiveDay(null);
           }
-          
+
           return {
             ...trip,
             days: updatedDays
@@ -706,7 +715,7 @@ export default function TravelItineraryPlanner() {
   // Add new activity
   const addActivity = (activityData) => {
     if (!activeTrip || !activeDay) return;
-    
+
     const newActivity = {
       id: `activity-${Date.now()}`,
       title: activityData?.title || "New Activity",
@@ -731,18 +740,17 @@ export default function TravelItineraryPlanner() {
       }
       return trip;
     }));
-    
+
     closeModal();
   };
 
   // Edit activity
   const editActivity = (activityData) => {
     if (!activityData) {
-      // If no data passed, open modal with current activity data
       openModal("activity", activityData);
       return;
     }
-    
+
     setTrips(trips.map(trip => {
       if (trip.id === activeTrip) {
         return {
@@ -751,7 +759,7 @@ export default function TravelItineraryPlanner() {
             if (day.id === activeDay) {
               return {
                 ...day,
-                activities: day.activities.map(activity => 
+                activities: day.activities.map(activity =>
                   activity.id === activityData.id ? { ...activity, ...activityData } : activity
                 )
               };
@@ -762,7 +770,7 @@ export default function TravelItineraryPlanner() {
       }
       return trip;
     }));
-    
+
     closeModal();
   };
 
@@ -795,39 +803,27 @@ export default function TravelItineraryPlanner() {
         confettiNumber: 50,
       });
     }
-    
-    // Simulate saving
-    // setTimeout(() => {
-    //   alert("Your itinerary has been saved successfully!");
-    // }, 1000);
   };
-
-  // Export as PDF (placeholder)
-//   const exportAsPdf = () => {
-//   const element = document.getElementById('itinerary-content');
-//   if (!element) {
-//     alert('Itinerary content not found!');
-//     return;
-//   }
-
-//   const opt = {
-//     margin:       0.5,
-//     filename:     'travel-itinerary.pdf',
-//     image:        { type: 'jpeg', quality: 0.98 },
-//     html2canvas:  { scale: 2 },
-//     jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-//   };
-
-//   html2pdf().set(opt).from(element).save();
-// };
 
   // Toggle dark mode
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-r from-black to-blue-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Loading your trips...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Modal content
-   const renderModalContent = () => {
+  const renderModalContent = () => {
     switch (modalType) {
       case "trip":
         return (
@@ -851,18 +847,18 @@ export default function TravelItineraryPlanner() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-white text-sm mb-1">Trip Name</label>
-                  <input 
-                    name="name" 
-                    defaultValue={modalData?.name || ""} 
+                  <input
+                    name="name"
+                    defaultValue={modalData?.name || ""}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-white text-sm mb-1">Destination</label>
-                  <input 
-                    name="destination" 
-                    defaultValue={modalData?.destination || ""} 
+                  <input
+                    name="destination"
+                    defaultValue={modalData?.destination || ""}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                     required
                   />
@@ -870,20 +866,20 @@ export default function TravelItineraryPlanner() {
                 <div className="flex space-x-4">
                   <div className="flex-1">
                     <label className="block text-white text-sm mb-1">Start Date</label>
-                    <input 
-                      type="date" 
-                      name="startDate" 
-                      defaultValue={modalData?.startDate || new Date().toISOString().split('T')[0]} 
+                    <input
+                      type="date"
+                      name="startDate"
+                      defaultValue={modalData?.startDate || new Date().toISOString().split('T')[0]}
                       className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                       required
                     />
                   </div>
                   <div className="flex-1">
                     <label className="block text-white text-sm mb-1">End Date</label>
-                    <input 
-                      type="date" 
-                      name="endDate" 
-                      defaultValue={modalData?.endDate || new Date().toISOString().split('T')[0]} 
+                    <input
+                      type="date"
+                      name="endDate"
+                      defaultValue={modalData?.endDate || new Date().toISOString().split('T')[0]}
                       className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                       required
                     />
@@ -894,10 +890,10 @@ export default function TravelItineraryPlanner() {
                   <div className="flex space-x-3 mt-2">
                     {tripColors.map(color => (
                       <label key={color.id} className="cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="color" 
-                          value={color.id} 
+                        <input
+                          type="radio"
+                          name="color"
+                          value={color.id}
                           defaultChecked={modalData?.color === color.id || (!modalData && color.id === "blue")}
                           className="sr-only"
                         />
@@ -908,15 +904,15 @@ export default function TravelItineraryPlanner() {
                 </div>
               </div>
               <div className="flex justify-end mt-6 space-x-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition"
                 >
                   {modalData ? "Update Trip" : "Create Trip"}
@@ -925,7 +921,7 @@ export default function TravelItineraryPlanner() {
             </form>
           </div>
         );
-      
+
       case "day":
         return (
           <div className="bg-gray-900 p-6 rounded-lg w-full max-w-md">
@@ -945,33 +941,33 @@ export default function TravelItineraryPlanner() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-white text-sm mb-1">Day Name</label>
-                  <input 
-                    name="name" 
-                    defaultValue={modalData?.name || `Day ${currentTrip?.days.length + 1 || 1}`} 
+                  <input
+                    name="name"
+                    defaultValue={modalData?.name || `Day ${currentTrip?.days.length + 1 || 1}`}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-white text-sm mb-1">Date</label>
-                  <input 
-                    type="date" 
-                    name="date" 
-                    defaultValue={modalData?.date || currentTrip?.startDate || new Date().toISOString().split('T')[0]} 
+                  <input
+                    type="date"
+                    name="date"
+                    defaultValue={modalData?.date || currentTrip?.startDate || new Date().toISOString().split('T')[0]}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                   />
                 </div>
               </div>
               <div className="flex justify-end mt-6 space-x-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition"
                 >
                   {modalData ? "Update Day" : "Add Day"}
@@ -980,7 +976,7 @@ export default function TravelItineraryPlanner() {
             </form>
           </div>
         );
-      
+
       case "activity":
         return (
           <div className="bg-gray-900 p-6 rounded-lg w-full max-w-md">
@@ -1001,42 +997,42 @@ export default function TravelItineraryPlanner() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-white text-sm mb-1">Activity Title</label>
-                  <input 
-                    name="title" 
-                    defaultValue={modalData?.title || ""} 
+                  <input
+                    name="title"
+                    defaultValue={modalData?.title || ""}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-white text-sm mb-1">Time</label>
-                  <input 
-                    name="time" 
-                    type="time" 
-                    defaultValue={modalData?.time?.split(' ')[0] || "12:00"} 
+                  <input
+                    name="time"
+                    type="time"
+                    defaultValue={modalData?.time?.split(' ')[0] || "12:00"}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-white text-sm mb-1">Description</label>
-                  <textarea 
-                    name="description" 
-                    defaultValue={modalData?.description || ""} 
+                  <textarea
+                    name="description"
+                    defaultValue={modalData?.description || ""}
                     className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700 h-24"
                   />
                 </div>
               </div>
               <div className="flex justify-end mt-6 space-x-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition"
                 >
                   {modalData ? "Update Activity" : "Add Activity"}
@@ -1045,290 +1041,289 @@ export default function TravelItineraryPlanner() {
             </form>
           </div>
         );
-      
+
       default:
         return null;
     }
   };
 
   return (
- <div id="itinerary-content">
-
-    <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-r from-black to-blue-900'} flex items-center justify-center p-4 font-sans`}>
-      <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl max-w-7xl w-full h-[85vh] flex overflow-hidden">
-        {/* All trips view */}
-        {activeView === "trips" && (
-          <div className="w-full flex flex-col p-8">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-white text-3xl font-bold">Your Travel Itineraries</h1>
-              <div className="flex space-x-4">
-                <button 
-                  onClick={() => openModal("trip")}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Create New Trip</span>
-                </button>
-                <button 
-                  onClick={toggleDarkMode}
-                  className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition"
-                >
-                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-              <AnimatePresence>
-                {/* Active trips */}
-                {trips.filter(trip => trip.active).map(trip => (
-                  <TripCard 
-                    key={trip.id}
-                    trip={trip}
-                    isActive={true}
-                    onClick={() => selectTrip(trip.id)}
-                    onEdit={() => openModal("trip", trip)}
-                    onDelete={() => deleteTrip(trip.id)}
-                    onActivate={() => {}}
-                  />
-                ))}
-                
-                {/* Other trips */}
-                {trips.filter(trip => !trip.active).map(trip => (
-                  <TripCard 
-                    key={trip.id}
-                    trip={trip}
-                    isActive={false}
-                    onClick={() => selectTrip(trip.id)}
-                    onEdit={() => openModal("trip", trip)}
-                    onDelete={() => deleteTrip(trip.id)}
-                    onActivate={activateTrip}
-                  />
-                ))}
-              </AnimatePresence>
-              
-              {trips.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-64 text-white/80">
-                  <Plane className="w-16 h-16 mb-4 opacity-50" />
-                  <p className="text-xl font-medium mb-2">No trips planned yet</p>
-                  <p className="text-sm mb-6">Start by creating your first trip</p>
-                  <button 
+    <div id="itinerary-content">
+      <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-r from-black to-blue-900'} flex items-center justify-center p-4 font-sans`}>
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl max-w-7xl w-full h-[85vh] flex overflow-hidden">
+          {/* All trips view */}
+          {activeView === "trips" && (
+            <div className="w-full flex flex-col p-8">
+              <div className="flex justify-between items-center mb-8">
+                <h1 className="text-white text-3xl font-bold">Your Travel Itineraries</h1>
+                <div className="flex space-x-4">
+                  <button
                     onClick={() => openModal("trip")}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Create New Trip</span>
                   </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {/* Trip planning view */}
-        {activeView === "planning" && currentTrip && (
-          <>
-            {/* Sidebar */}
-            <div className="w-64 bg-black/30 backdrop-blur p-6 flex flex-col">
-              <div className="flex items-center mb-6">
-                <button 
-                  onClick={goToTrips}
-                  className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition mr-3"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <h2 className="text-white font-bold text-xl truncate">{currentTrip.name}</h2>
-              </div>
-              
-              <div className="bg-white/10 rounded-lg p-3 mb-6">
-                <div className="text-white/80 text-sm mb-1">Destination</div>
-                <div className="text-white font-medium flex items-center">
-                  <Map className="w-4 h-4 mr-2" />
-                  {currentTrip.destination}
-                </div>
-                <div className="flex justify-between mt-3 text-xs text-white/80">
-                  <div>
-                    <div className="font-medium">From</div>
-                    <div>{formatDate(currentTrip.startDate)}</div>
-                  </div>
-                  <div>
-                    <div className="font-medium">To</div>
-                    <div>{formatDate(currentTrip.endDate)}</div>
-                  </div>
+                  <button
+                    onClick={toggleDarkMode}
+                    className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition"
+                  >
+                    {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
-              
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-white font-bold">Days</h3>
-                <button 
-                  onClick={() => openModal("day")}
-                  className="p-1 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-                {currentTrip.days.length > 0 ? (
-                  <div className="space-y-2">
-                    {currentTrip.days.map((day) => (
-                      <DayCard
-                        key={day.id}
-                        day={day}
-                        isActive={activeDay === day.id}
-                        onClick={() => setActiveDay(day.id)}
-                        onEdit={() => openModal("day", day)}
-                        onDelete={deleteDay}
-                        tripColor={currentTrip.color}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-40 text-white/60">
-                    <p className="text-sm mb-4">No days added yet</p>
-                    <button 
-                      onClick={() => openModal("day")}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg transition text-sm"
+
+              <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                <AnimatePresence>
+                  {/* Active trips */}
+                  {trips.filter(trip => trip.active).map(trip => (
+                    <TripCard
+                      key={trip.id}
+                      trip={trip}
+                      isActive={true}
+                      onClick={() => selectTrip(trip.id)}
+                      onEdit={() => openModal("trip", trip)}
+                      onDelete={() => deleteTrip(trip.id)}
+                      onActivate={() => { }}
+                    />
+                  ))}
+
+                  {/* Other trips */}
+                  {trips.filter(trip => !trip.active).map(trip => (
+                    <TripCard
+                      key={trip.id}
+                      trip={trip}
+                      isActive={false}
+                      onClick={() => selectTrip(trip.id)}
+                      onEdit={() => openModal("trip", trip)}
+                      onDelete={() => deleteTrip(trip.id)}
+                      onActivate={activateTrip}
+                    />
+                  ))}
+                </AnimatePresence>
+
+                {trips.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-64 text-white/80">
+                    <Plane className="w-16 h-16 mb-4 opacity-50" />
+                    <p className="text-xl font-medium mb-2">No trips planned yet</p>
+                    <p className="text-sm mb-6">Start by creating your first trip</p>
+                    <button
+                      onClick={() => openModal("trip")}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span>Add First Day</span>
+                      <Plus className="w-5 h-5" />
+                      <span>Create New Trip</span>
                     </button>
                   </div>
                 )}
               </div>
-              
-              <div className="mt-auto pt-4 flex flex-col space-y-2">
-                <button
-                  onClick={() => openModal("trip", currentTrip)}
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-white/10 text-white hover:bg-white/20 transition w-full"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Trip Settings</span>
-                </button>
-                
-                <button
-                  onClick={toggleDarkMode}
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-white/10 text-white hover:bg-white/20 transition w-full"
-                >
-                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
-                </button>
-              </div>
             </div>
+          )}
 
-            {/* Main Board */}
-            <div className="flex-1 p-8 overflow-hidden flex flex-col">
-              <div className="flex justify-between items-center mb-8">
-                <h1 className="text-white text-2xl font-bold">Trip Planner</h1>
-                <div className="flex gap-4">
-                  <button 
-                    onClick={saveItinerary}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+          {/* Trip planning view */}
+          {activeView === "planning" && currentTrip && (
+            <>
+              {/* Sidebar */}
+              <div className="w-64 bg-black/30 backdrop-blur p-6 flex flex-col">
+                <div className="flex items-center mb-6">
+                  <button
+                    onClick={goToTrips}
+                    className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition mr-3"
                   >
-                    <Save className="w-4 h-4" />
-                    <span>Save Itinerary</span>
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
-                 <PdfExporter />
+                  <h2 className="text-white font-bold text-xl truncate">{currentTrip.name}</h2>
                 </div>
-              </div>
 
-              {currentDay ? (
-                <>
-                  <div className="mb-4">
-                    <h2 className="text-white text-xl font-semibold flex items-center">
-                      <span>{currentDay.name} Activities</span>
-                      {currentDay.date && (
-                        <span className="ml-2 text-white/70 text-sm">
-                          ({formatDate(currentDay.date)})
-                        </span>
-                      )}
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </h2>
+                <div className="bg-white/10 rounded-lg p-3 mb-6">
+                  <div className="text-white/80 text-sm mb-1">Destination</div>
+                  <div className="text-white font-medium flex items-center">
+                    <Map className="w-4 h-4 mr-2" />
+                    {currentTrip.destination}
                   </div>
+                  <div className="flex justify-between mt-3 text-xs text-white/80">
+                    <div>
+                      <div className="font-medium">From</div>
+                      <div>{formatDate(currentTrip.startDate)}</div>
+                    </div>
+                    <div>
+                      <div className="font-medium">To</div>
+                      <div>{formatDate(currentTrip.endDate)}</div>
+                    </div>
+                  </div>
+                </div>
 
-                  <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                      modifiers={[restrictToParentElement]}
-                    >
-                      <SortableContext
-                        items={currentDay.activities.map(a => a.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {currentDay.activities.map((activity) => (
-                          <SortableActivityCard 
-                            key={activity.id} 
-                            activity={activity} 
-                            onEdit={editActivity}
-                            onDelete={deleteActivity}
-                            color={currentTrip.color}
-                          />
-                        ))}
-                      </SortableContext>
-                    </DndContext>
-                    
-                    {currentDay.activities.length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-48 text-white/60">
-                        <p className="mb-2">No activities planned for this day yet</p>
-                        <p className="text-sm">Use the Add Activity button to get started</p>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-white/60">
-                  <Calendar className="w-12 h-12 mb-4 opacity-40" />
-                  <p className="mb-2">Add a day to start planning your activities</p>
-                  <button 
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-white font-bold">Days</h3>
+                  <button
                     onClick={() => openModal("day")}
-                    className="mt-4 flex items-center gap-2 bg-gray-800/70 hover:bg-gray-700/70 text-white px-4 py-2 rounded-lg transition"
+                    className="p-1 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition"
                   >
-                    <Plus className="w-5 h-5" />
-                    <span>Add First Day</span>
+                    <Plus className="w-4 h-4" />
                   </button>
                 </div>
-              )}
 
-              {currentDay && (
-                <motion.button
-                  onClick={() => openModal("activity")}
-                  className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Plus className="w-6 h-6" />
-                  <div className="absolute inset-0 rounded-full border-4 border-blue-400/50 animate-ping" />
-                </motion.button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-      
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-          >
-            <div className="relative">
-              <button 
-                onClick={closeModal}
-                className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              {renderModalContent()}
-            </div>
-          </motion.div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                  {currentTrip.days.length > 0 ? (
+                    <div className="space-y-2">
+                      {currentTrip.days.map((day) => (
+                        <DayCard
+                          key={day.id}
+                          day={day}
+                          isActive={activeDay === day.id}
+                          onClick={() => setActiveDay(day.id)}
+                          onEdit={() => openModal("day", day)}
+                          onDelete={deleteDay}
+                          tripColor={currentTrip.color}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-white/60">
+                      <p className="text-sm mb-4">No days added yet</p>
+                      <button
+                        onClick={() => openModal("day")}
+                        className="flex items-center gap-2 px-3 py-2 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg transition text-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add First Day</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-auto pt-4 flex flex-col space-y-2">
+                  <button
+                    onClick={() => openModal("trip", currentTrip)}
+                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-white/10 text-white hover:bg-white/20 transition w-full"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Trip Settings</span>
+                  </button>
+
+                  <button
+                    onClick={toggleDarkMode}
+                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-white/10 text-white hover:bg-white/20 transition w-full"
+                  >
+                    {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Board */}
+              <div className="flex-1 p-8 overflow-hidden flex flex-col">
+                <div className="flex justify-between items-center mb-8">
+                  <h1 className="text-white text-2xl font-bold">Trip Planner</h1>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={saveItinerary}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Save Itinerary</span>
+                    </button>
+                    <PdfExporter />
+                  </div>
+                </div>
+
+                {currentDay ? (
+                  <>
+                    <div className="mb-4">
+                      <h2 className="text-white text-xl font-semibold flex items-center">
+                        <span>{currentDay.name} Activities</span>
+                        {currentDay.date && (
+                          <span className="ml-2 text-white/70 text-sm">
+                            ({formatDate(currentDay.date)})
+                          </span>
+                        )}
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </h2>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                        modifiers={[restrictToParentElement]}
+                      >
+                        <SortableContext
+                          items={currentDay.activities.map(a => a.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {currentDay.activities.map((activity) => (
+                            <SortableActivityCard
+                              key={activity.id}
+                              activity={activity}
+                              onEdit={editActivity}
+                              onDelete={deleteActivity}
+                              color={currentTrip.color}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
+
+                      {currentDay.activities.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-48 text-white/60">
+                          <p className="mb-2">No activities planned for this day yet</p>
+                          <p className="text-sm">Use the Add Activity button to get started</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-64 text-white/60">
+                    <Calendar className="w-12 h-12 mb-4 opacity-40" />
+                    <p className="mb-2">Add a day to start planning your activities</p>
+                    <button
+                      onClick={() => openModal("day")}
+                      className="mt-4 flex items-center gap-2 bg-gray-800/70 hover:bg-gray-700/70 text-white px-4 py-2 rounded-lg transition"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Add First Day</span>
+                    </button>
+                  </div>
+                )}
+
+                {currentDay && (
+                  <motion.button
+                    onClick={() => openModal("activity")}
+                    className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg transition"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Plus className="w-6 h-6" />
+                    <div className="absolute inset-0 rounded-full border-4 border-blue-400/50 animate-ping" />
+                  </motion.button>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      )}
-      
-      <style jsx global>{`
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+            >
+              <div className="relative">
+                <button
+                  onClick={closeModal}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-white transition z-10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                {renderModalContent()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
@@ -1347,17 +1342,15 @@ export default function TravelItineraryPlanner() {
           background: rgba(255, 255, 255, 0.5);
         }
         
-        /* Fix time input appearance in Firefox */
         input[type="time"]::-webkit-calendar-picker-indicator {
           filter: invert(1);
         }
         
-        /* Fix date input appearance in Firefox */
         input[type="date"]::-webkit-calendar-picker-indicator {
           filter: invert(1);
         }
       `}</style>
-    </div>
+      </div>
     </div>
   );
 }
