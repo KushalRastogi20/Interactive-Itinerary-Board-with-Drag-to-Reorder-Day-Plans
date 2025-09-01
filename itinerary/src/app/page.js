@@ -1,7 +1,7 @@
 // src/app/page.js
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,12 +9,14 @@ import LandingHeader from "../components/LandingHeader";
 import LandingFeature from "../components/LandingFeature";
 import LandingScreenshots from "../components/LandingScreenshots";
 import LandingFooter from "../components/LandingFooter";
+import { checkAuth } from "@/utils/isLoggedIn";
 // console.log("LandingHeader:", LandingHeader);
 // console.log("LandingFeature:", LandingFeature);
 // console.log("LandingScreenshots:", LandingScreenshots);
 // console.log("LandingFooter:", LandingFooter);
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   // Enable smooth scrolling behavior
   useEffect(() => {
     document.documentElement.style.scrollBehavior = "smooth";
@@ -22,12 +24,24 @@ export default function Home() {
       document.documentElement.style.scrollBehavior = "auto";
     };
   }, []);
-const router = useRouter();
-
+  const router = useRouter();
+   useEffect(() => {
+    (async () => {
+      const auth = await checkAuth();
+      console.log("Auth status:", auth);
+      setIsAuthenticated(auth.loggedIn);
+    })();
+  }, []);
   const handleSubmit = (e) => {
     e.preventDefault();
-    router.push('/planner');  
-  };
+    if (isAuthenticated) {
+      router.push("/planner");
+    } else {
+      router.push("/auth");
+    }
+  }
+
+
 
   return (
     <main className="min-h-screen">
