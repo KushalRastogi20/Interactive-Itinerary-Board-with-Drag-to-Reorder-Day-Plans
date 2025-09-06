@@ -18,8 +18,9 @@ import {
 import JSConfetti from "js-confetti";
 import api from "@/utils/axios";
 import Cookies from "js-cookie";
+import { checkAuth } from "@/utils/isLoggedIn";
+import { useRouter } from "next/navigation";
 // import { checkAuth } from "@/utils/isLoggedIn";
-
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,12 +28,24 @@ const AuthPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const router = useRouter();
+  useEffect(() => {
+    (async () => {
+      const auth = await checkAuth();
+      console.log("Auth status:", auth);
+      setIsAuthenticated(auth.loggedIn);
+      if(auth.loggedIn){
+        router.push("/planner");
+      }
+    })();
+  }, []);
 
   // Initialize JSConfetti
   const jsConfettiRef = useRef(null);
@@ -132,7 +145,7 @@ const AuthPage = () => {
         }
 
         // Redirect to dashboard or main app
-        window.location.href = '/planner'; // or use Next.js router
+        window.location.href = "/planner"; // or use Next.js router
         console.log(isLogin ? "Login successful" : "Signup successful");
       } else {
         setError(response.data.message || "Authentication failed");
