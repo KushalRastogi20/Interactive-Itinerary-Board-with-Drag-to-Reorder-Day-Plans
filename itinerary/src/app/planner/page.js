@@ -156,7 +156,7 @@ function DashboardStats({ stats, loading }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-white/70 text-sm font-medium">Active Trips</p>
-            <p className="text-white text-3xl font-bold">{stats.activeTrips || 0}</p>
+            <p className="text-white text-3xl font-bold">{stats.totalActiveTrips || 0}</p>
           </div>
           <div className="p-3 bg-green-500/20 rounded-full">
             <TrendingUp className="w-6 h-6 text-green-400" />
@@ -172,8 +172,8 @@ function DashboardStats({ stats, loading }) {
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white/70 text-sm font-medium">Countries Visited</p>
-            <p className="text-white text-3xl font-bold">{stats.countriesVisited || 0}</p>
+            <p className="text-white/70 text-sm font-medium">Upcoming Trips</p>
+            <p className="text-white text-3xl font-bold">{stats.totalInactiveTrips || 0}</p>
           </div>
           <div className="p-3 bg-purple-500/20 rounded-full">
             <Globe className="w-6 h-6 text-purple-400" />
@@ -189,8 +189,8 @@ function DashboardStats({ stats, loading }) {
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white/70 text-sm font-medium">Total Activities</p>
-            <p className="text-white text-3xl font-bold">{stats.totalActivities || 0}</p>
+            <p className="text-white/70 text-sm font-medium">Total Days</p>
+            <p className="text-white text-3xl font-bold">{stats.totalDays || 0}</p>
           </div>
           <div className="p-3 bg-amber-500/20 rounded-full">
             <Star className="w-6 h-6 text-amber-400" />
@@ -239,6 +239,7 @@ function PopularDestinations({ onSelectDestination }) {
 // Existing components (SortableActivityCard, DayCard, TripCard) remain the same...
 function SortableActivityCard({ activity, onEdit, onDelete, color }) {
   const [showTooltip, setShowTooltip] = useState(false);
+  // const [isHovered, setIsHovered] = useState(false);
   const selectedColor = tripColors.find(tc => tc.id === color) || tripColors[0];
   const {
     attributes,
@@ -298,6 +299,182 @@ function SortableActivityCard({ activity, onEdit, onDelete, color }) {
     </motion.div>
   );
 }
+// Simple, Clean Trip Card Component
+// Themed Trip Card Component
+// Themed Trip Card Component with Multiple Color Options
+function ThemedTripCard({ trip, isActive, onClick, onEdit, onDelete, onActivate }) {
+  const selectedColor = tripColors.find(tc => tc.id === trip.color) || tripColors[0];
+  
+  const getDaysLeft = () => {
+    const today = new Date();
+    const start = new Date(trip.startDate);
+    const diffTime = start - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { text: "Past trip", color: "text-gray-400" };
+    if (diffDays === 0) return { text: "Today!", color: "text-green-400" };
+    if (diffDays <= 7) return { text: `${diffDays} days left`, color: "text-yellow-400" };
+    return { text: `${diffDays} days left`, color: "text-blue-400" };
+  };
+
+  const daysLeft = getDaysLeft();
+
+  // Different card styles based on trip index or you can randomize
+  const getCardStyle = (tripId) => {
+    const styles = [
+      // Option 1: Darker, More Subtle Cards
+      "bg-gray-900/40 backdrop-blur-xl border-gray-700/50",
+      // Option 2: Warmer Glass Effect  
+      "bg-amber-900/20 backdrop-blur-xl border-amber-500/30",
+      // Option 3: Pure Glass (Very Minimal)
+      "bg-white/5 backdrop-blur-xl border-white/10",
+      // Option 4: Darker with Colored Accents
+      "bg-black/30 backdrop-blur-xl border-purple-500/20",
+      // Option 5: Trip Color as Card Background
+      `bg-${selectedColor.id}-900/20 backdrop-blur-xl border-${selectedColor.id}-500/30`
+    ];
+    
+    // Use trip id to consistently assign same style to same trip
+    const styleIndex = parseInt(tripId?.toString().slice(-1)) % styles.length;
+    return styles[styleIndex];
+  };
+
+  const cardStyle = getCardStyle(trip?.id);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+      className={`
+        cursor-pointer ${cardStyle} rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border
+        ${isActive ? 'ring-2 ring-green-400/50 shadow-green-400/20' : ''}
+      `}
+      onClick={onClick}
+    >
+      {/* Status Badge */}
+      <div className="absolute top-4 right-4 z-10">
+        {isActive ? (
+          <div className="flex items-center gap-2 bg-green-500/20 backdrop-blur-sm rounded-full px-3 py-1 border border-green-500/30">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [1, 0.8, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="w-2 h-2 bg-green-400 rounded-full"
+            />
+            <span className="text-green-300 text-xs font-medium">Active</span>
+          </div>
+        ) : (
+          <div className="bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
+            <span className={`${daysLeft.color} text-xs font-medium`}>{daysLeft.text}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Dynamic Color Strip based on card style */}
+      <div className={`absolute top-0 left-0 w-full h-1 ${selectedColor.bg}`} />
+
+      <div className="p-6">
+        {/* Trip Header */}
+        <div className="mb-4">
+          <h3 className="text-white text-xl font-bold mb-2">{trip.name}</h3>
+          <div className="flex items-center text-white/80 text-sm">
+            <MapPin className="w-4 h-4 mr-2 text-blue-400" />
+            <span>{trip.destination}</span>
+          </div>
+        </div>
+
+        {/* Trip Stats with dynamic background */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+            <div className="flex items-center text-white/60 text-xs mb-1">
+              <Calendar className="w-3 h-3 mr-1" />
+              <span>Duration</span>
+            </div>
+            <div className="text-white font-bold">
+              {getTripDuration(trip.startDate, trip.endDate)} days
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+            <div className="flex items-center text-white/60 text-xs mb-1">
+              <Users className="w-3 h-3 mr-1" />
+              <span>Activities</span>
+            </div>
+            <div className="text-white font-bold">
+              {trip.days?.reduce((total, day) => total + (day.activities?.length || 0), 0) || 0}
+            </div>
+          </div>
+        </div>
+
+        {/* Date Range with enhanced styling */}
+        <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-lg p-3 mb-6 border border-white/10">
+          <div className="flex justify-between items-center text-sm">
+            <div>
+              <div className="text-white/60 text-xs mb-1">Departure</div>
+              <div className="text-white font-medium">{formatDate(trip.startDate)}</div>
+            </div>
+            <div className="w-8 border-t border-dashed border-white/30"></div>
+            <div className="text-right">
+              <div className="text-white/60 text-xs mb-1">Return</div>
+              <div className="text-white font-medium">{formatDate(trip.endDate)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons with enhanced gradients */}
+        <div className="flex gap-2">
+          {!isActive && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={e => { e.stopPropagation(); onActivate(trip.id); }}
+              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2 px-4 rounded-lg transition font-medium shadow-md border border-green-400/20"
+            >
+              Activate
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={e => { e.stopPropagation(); onEdit(trip); }}
+            className="p-2 bg-gradient-to-r from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 rounded-lg transition border border-blue-500/30 backdrop-blur-sm"
+          >
+            <Pencil className="w-4 h-4 text-blue-400" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={e => { e.stopPropagation(); onDelete(trip.id); }}
+            className="p-2 bg-gradient-to-r from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 rounded-lg transition border border-red-500/30 backdrop-blur-sm"
+          >
+            <Trash2 className="w-4 h-4 text-red-400" />
+          </motion.button>
+        </div>
+
+        {/* Background Pattern for visual interest */}
+        <div className="absolute top-0 right-0 w-32 h-32 opacity-5 overflow-hidden pointer-events-none">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          >
+            <Plane className="w-32 h-32 text-white transform translate-x-8 -translate-y-8" />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Subtle Glow Effect on Hover */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        className={`absolute inset-0 bg-gradient-to-br from-${selectedColor.id}-500/10 via-transparent to-${selectedColor.id}-500/5 rounded-2xl pointer-events-none`}
+      />
+    </motion.div>
+  );
+}
+
+
+
 
 function DayCard({ day, isActive, onClick, onEdit, onDelete, tripColor }) {
   const selectedColor = tripColors.find(tc => tc.id === tripColor) || tripColors[0];
@@ -484,6 +661,8 @@ export default function TravelItineraryPlanner() {
   const [modalData, setModalData] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [user, setUser]=useState(null);
+  const [activeTab, setActiveTab] = useState("all"); // Add this line
+
 
   
   // DND Sensors
@@ -522,7 +701,7 @@ export default function TravelItineraryPlanner() {
   const fetchDashboardStats = async () => {
     try {
       setStatsLoading(true);
-      const response = await api.get('/dashboard/stats');
+      const response = await api.get('/trips/stats');
       if (response.data.success) {
         setDashboardStats(response.data.data);
       }
@@ -531,9 +710,9 @@ export default function TravelItineraryPlanner() {
       // Set default values on error
       setDashboardStats({
         totalTrips: 0,
-        activeTrips: 0,
-        countriesVisited: 0,
-        totalActivities: 0
+        totalActiveTrips: 0,
+        totalInactiveTrips: 0,
+        totalDays: 0
       });
     } finally {
       setStatsLoading(false);
@@ -1036,84 +1215,192 @@ const renderModalContent = () => {
         )}
 
         {/* Trips view */}
-        {activeView === "trips" && (
-          <div className="w-full flex flex-col p-8">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={goToDashboard} 
-                  className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <h1 className="text-white text-3xl font-bold">Your Travel Itineraries</h1>
-              </div>
-              <div className="flex space-x-4">
-                <button 
-                  onClick={() => openModal("trip")} 
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Create New Trip</span>
-                </button>
-                <button 
-                  onClick={toggleDarkMode} 
-                  className="p-2 rounded-full bg-gray-800/50 text-white hover:bg-gray-700/60 transition"
-                >
-                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-              {loading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-                </div>
-              ) : (
-                <AnimatePresence>
-                  {trips.filter(trip => trip.active).map(trip => (
-                    <TripCard 
-                      key={trip.id} 
-                      trip={trip} 
-                      isActive={true}
-                      onClick={() => selectTrip(trip.id)}
-                      onEdit={() => openModal("trip", trip)}
-                      onDelete={() => deleteTrip(trip.id)}
-                      onActivate={() => {}}
-                    />
-                  ))}
-                  {trips.filter(trip => !trip.active).map(trip => (
-                    <TripCard 
-                      key={trip.id} 
-                      trip={trip} 
-                      isActive={false}
-                      onClick={() => selectTrip(trip.id)}
-                      onEdit={() => openModal("trip", trip)}
-                      onDelete={() => deleteTrip(trip.id)}
-                      onActivate={activateTrip}
-                    />
-                  ))}
-                </AnimatePresence>
-              )}
-              
-              {!loading && trips.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-64 text-white/80">
-                  <Plane className="w-16 h-16 mb-4 opacity-50" />
-                  <p className="text-xl font-medium mb-2">No trips planned yet</p>
-                  <p className="text-sm mb-6">Start by creating your first trip</p>
-                  <button 
-                    onClick={() => openModal("trip")}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Create New Trip</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+{/* Trips view - With Working Tabs & Theme Colors */}
+{activeView === "trips" && (
+  <div className="w-full flex flex-col p-4 md:p-8">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={goToDashboard} 
+          className="p-2 rounded-xl bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition border border-white/20"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="text-white text-2xl md:text-3xl font-bold">Your Journeys</h1>
+          <p className="text-white/60 text-sm">Plan, organize and manage your travel adventures</p>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <button 
+          onClick={() => openModal("trip")} 
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition font-medium shadow-lg"
+        >
+          <Plus className="w-5 h-5" />
+          <span>New Adventure</span>
+        </button>
+        <button 
+          onClick={toggleDarkMode} 
+          className="p-3 rounded-xl bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition border border-white/20"
+        >
+          {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+      </div>
+    </div>
+
+    {/* Working Tabs with Smooth Transitions */}
+    <div className="flex gap-1 mb-8 bg-white/5 backdrop-blur-sm rounded-xl p-1 border border-white/10">
+      <motion.button
+        onClick={() => setActiveTab("all")}
+        className={`relative flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+          activeTab === "all"
+            ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+            : "text-white/70 hover:text-white hover:bg-white/10"
+        }`}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        All Trips ({trips.length})
+        {activeTab === "all" && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg -z-10"
+            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          />
         )}
+      </motion.button>
+      
+      <motion.button
+        onClick={() => setActiveTab("active")}
+        className={`relative flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+          activeTab === "active"
+            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg"
+            : "text-white/70 hover:text-white hover:bg-white/10"
+        }`}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        Active ({trips.filter(trip => trip.active).length})
+        {activeTab === "active" && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg -z-10"
+            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          />
+        )}
+      </motion.button>
+      
+      <motion.button
+        onClick={() => setActiveTab("upcoming")}
+        className={`relative flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+          activeTab === "upcoming"
+            ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg"
+            : "text-white/70 hover:text-white hover:bg-white/10"
+        }`}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        Upcoming ({trips.filter(trip => !trip.active).length})
+        {activeTab === "upcoming" && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg -z-10"
+            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          />
+        )}
+      </motion.button>
+    </div>
+
+    {/* Filtered Trips Grid */}
+    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 animate-pulse border border-white/20">
+              <div className="h-6 bg-white/20 rounded mb-4"></div>
+              <div className="h-4 bg-white/15 rounded mb-3"></div>
+              <div className="h-12 bg-white/20 rounded"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <motion.div 
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {trips
+              .filter(trip => {
+                if (activeTab === "active") return trip.active;
+                if (activeTab === "upcoming") return !trip.active;
+                return true; // "all" shows everything
+              })
+              .map(trip => (
+                <ThemedTripCard 
+                  key={trip.id} 
+                  trip={trip} 
+                  isActive={trip.active}
+                  onClick={() => selectTrip(trip.id)}
+                  onEdit={() => openModal("trip", trip)}
+                  onDelete={() => deleteTrip(trip.id)}
+                  onActivate={activateTrip}
+                />
+              ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
+      
+      {/* Empty State */}
+      {!loading && trips.filter(trip => {
+        if (activeTab === "active") return trip.active;
+        if (activeTab === "upcoming") return !trip.active;
+        return true;
+      }).length === 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center h-96 text-center"
+        >
+          <div className="relative mb-8">
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="w-24 h-24 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl"
+            >
+              <Plane className="w-12 h-12 text-white" />
+            </motion.div>
+          </div>
+          
+          <h3 className="text-white text-xl font-bold mb-3">
+            {activeTab === "active" && "No active trips"}
+            {activeTab === "upcoming" && "No upcoming trips"}
+            {activeTab === "all" && "No trips yet"}
+          </h3>
+          <p className="text-white/70 mb-6">
+            {activeTab === "active" && "Activate a trip to see it here"}
+            {activeTab === "upcoming" && "Create a new trip to get started"}
+            {activeTab === "all" && "Create your first trip to begin your journey"}
+          </p>
+          
+          <button 
+            onClick={() => openModal("trip")}
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl transition font-medium shadow-lg"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Trip</span>
+          </button>
+        </motion.div>
+      )}
+    </div>
+  </div>
+)}
+
+
+
 
         {/* Planning view - keeping existing structure */}
         {activeView === "planning" && currentTrip && (
